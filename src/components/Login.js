@@ -4,6 +4,8 @@ import { encryptVault, decryptVault } from "../utils/CryptoService";
 import { verifyVault, writeVaultHash } from "../utils/web3Service";
 import Toast from './Toast';
 
+
+
 export default function Login({ onUnlock }) {
   const [password, setPassword] = useState("");
   const [vaultExists, setVaultExists] = useState(false);
@@ -13,6 +15,7 @@ export default function Login({ onUnlock }) {
   const [processing, setProcessing] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("error"); // Add toast type state
+  const [btnState, setBtnState] = useState("base");
 
   const showToast = (msg, type = "error") => { // Accept type parameter
     setToastMessage(msg);
@@ -137,7 +140,7 @@ export default function Login({ onUnlock }) {
             onClick={() => setShowPassword(!showPassword)}
             style={styles.eyeButton}
           >
-            {showPassword ? '☁️' : '✨'}
+            {showPassword ? '👁️' : '🙈'}
           </button>
         </div>
 
@@ -153,13 +156,25 @@ export default function Login({ onUnlock }) {
           onClick={handleAuth}
           disabled={processing || password.length < 8}
           style={{
-            ...styles.button,
-            opacity: (processing || password.length < 8) ? 0.6 : 1,
-            cursor: (processing || password.length < 8) ? 'default' : 'pointer'
-          }}
-        >
-          {processing ? "please wait..." : vaultExists ? "unlock" : "create"}
-        </button>
+            ...cyberButtonBase,
+            ...(btnState === 'hover' ? cyberButtonHover : {}),
+            ...(btnState === 'active' ? cyberButtonActive : {}),
+            ...(processing || password.length < 8? {
+        opacity: 0.5,
+        cursor: 'not-allowed',
+        boxShadow: 'none',
+        filter: 'grayscale(0.3)',
+      }
+    : {}),
+}}
+onMouseEnter={() => setBtnState('hover')}
+      onMouseLeave={() => setBtnState('base')}
+      onMouseDown={() => setBtnState('active')}
+      onMouseUp={() => setBtnState('hover')}
+    >
+      unlock
+    </button>
+  
 
         {!processing && (
           <button
@@ -170,7 +185,7 @@ export default function Login({ onUnlock }) {
             }}
             style={styles.toggleButton}
           >
-            {vaultExists ? "switch to create" : "already have one?"}
+            {vaultExists ? "Don't have one? Create an account!" : "Already have one? Switch to the Existing Vault!"}
           </button>
         )}
       </div>
@@ -181,141 +196,202 @@ export default function Login({ onUnlock }) {
 }
 
 const keyframes = `
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-  }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.15; }
-    50% { opacity: 0.25; }
-  }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.22; }
+}
+
+@keyframes lift {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-2px); }
+}
 `;
 
 const styles = {
   container: {
-    width: '100vh',
-    height: '100%',
-    backgroundColor: '#0f172a',
+    width: '360px',
+    minHeight: '520px',
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: '#020617',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '16px',
-    position: 'relative',
-    overflow: 'hidden',
+    padding: '20px',
     boxSizing: 'border-box',
-    fontFamily: '"Ubuntu","Segoe UI", Roboto, sans-serif'
+    fontFamily:
+       "'JetBrains Mono', monospace",
   },
-  bgEffects: {
-    position: 'absolute',
-    inset: 0,
-    pointerEvents: 'none'
+
+content: {
+  position: 'relative',
+  zIndex: 2,
+  width: '100%',
+  padding: '28px 22px',
+  borderRadius: '22px',
+  background:
+    'linear-gradient(180deg, rgba(15,23,42,0.75), rgba(2,6,23,0.85))',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  boxShadow:
+    '0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.04)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '14px'
+},
+
+title: {
+  fontFamily: 'JetBrains Mono, monospace',
+  fontSize: 28,
+  fontWeight: 600,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  color: '#e5e7eb',
+  textAlign: 'center',
+  margin: 0,
+  textShadow:
+    '0 0 12px rgba(6, 182, 212, 0.35), 0 0 24px rgba(6, 182, 212, 0.15)'
+},
+
+status: {
+    fontFamily:  "'JetBrains Mono', monospace",  
+    fontSize: '13px',
+    fontWeight: 400,
+    color: '#94a3b8',
+    letterSpacing: '0.04em',
+    marginTop: '6px',
+    textAlign: 'center',
+    marginBottom: '10px'
   },
-  colorBlur: {
-    position: 'absolute',
-    top: '20%',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: '300px',
-    height: '300px',
-    backgroundColor: '#10b981',
-    borderRadius: '50%',
-    filter: 'blur(80px)',
-    opacity: 0.15,
-    animation: 'pulse 4s infinite ease-in-out'
-  },
-  content: {
-    position: 'relative',
-    zIndex: 10,
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '16px'
-  },
-  title: {
-    fontSize: '32px',
-    fontWeight: '700',
-    margin: 0,
-    color: '#e2e8f0',
-    letterSpacing: '-0.02em'
-  },
-  status: {
-    color: '#64748b',
-    fontSize: '15px',
-    margin: '-8px 0 8px 0',
-    textAlign: 'center'
-  },
+
   inputWrapper: {
-    position: 'relative',
-    width: '100%',
-    maxWidth: '280px'
-  },
+  position: 'relative',
+  width: '100%',
+  maxWidth: '280px',   // ✅ ADD THIS
+  margin: '0 auto'     // ✅ CENTER IT
+},
+
+
   input: {
     width: '100%',
-    padding: '12px 16px',
-    backgroundColor: '#1e293b',
-    borderRadius: '16px',
-    color: '#e2e8f0',
-    border: '1px solid #334155',
-    outline: 'none',
-    fontSize: '14px',
+    padding: '14px 52px 14px 18px',
     boxSizing: 'border-box',
-    transition: 'all 0.2s ease',
-    textAlign: 'center'
+    borderRadius: '14px',
+    backgroundColor: 'rgba(2,6,23,0.65)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    color: '#f8fafc',
+    fontSize: '14px',
+    fontWeight: 400,
+    outline: 'none',
+    letterSpacing: '0.01em',
+    transition: 'border 0.2s ease, background 0.2s ease'
   },
-  eyeButton: {
-    position: 'absolute',
-    right: '12px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '14px'
-  },
+
+ eyeButton: {
+  position: 'absolute',
+  right: '18px', // ✅ pull inward
+  top: '50%',
+  transform: 'translateY(-50%)',
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  fontSize: '16px',
+  color: '#94a3b8'
+},
+
+
   strengthBar: {
     height: '4px',
     width: '100%',
-    maxWidth: '200px',
-    backgroundColor: '#1e293b',
-    borderRadius: '10px',
+    borderRadius: '999px',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     overflow: 'hidden'
   },
+
   strengthFill: {
     height: '100%',
-    transition: 'all 0.4s ease'
+    borderRadius: '999px',
+    transition: 'width 0.4s ease',
+    background:
+      'linear-gradient(90deg, #22d3ee, #10b981)'
   },
+
   button: {
     width: '100%',
-    maxWidth: '280px',
     padding: '14px',
-    background: '#10b981',
+    marginTop: '6px',
     borderRadius: '16px',
     border: 'none',
-    color: '#ffffff',
-    fontSize: '15px',
-    fontWeight: '600',
-    boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
-    transition: 'all 0.3s ease'
-  },
-  toggleButton: {
+    background:
+      'linear-gradient(135deg, #22d3ee, #10b981)',
+    color: '#020617',
     fontSize: '14px',
-    color: '#64748b',
+    fontWeight: 600,
+    letterSpacing: '0.02em',
+    boxShadow:
+      '0 20px 40px rgba(16,185,129,0.35)',
+    transition:
+      'transform 0.15s ease, box-shadow 0.15s ease'
+  },
+
+  toggleButton: {
+    fontSize: '13px',
+    fontWeight: 400,
+    color: '#94a3b8',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
     marginTop: '8px',
-    fontWeight: '500'
+    opacity: 0.9
   },
+
   spinner: {
-    width: '24px',
-    height: '24px',
-    border: '3px solid #1e293b',
-    borderTop: '3px solid #10b981',
+    width: '26px',
+    height: '26px',
     borderRadius: '50%',
-    animation: 'spin 0.8s linear infinite'
+    border: '3px solid rgba(255,255,255,0.1)',
+    borderTop: '3px solid #22d3ee',
+    animation: 'spin 0.9s linear infinite'
   }
 };
+
+const cyberButtonBase = {
+  fontFamily: "'JetBrains Mono', monospace",
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  transition: 'transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease',
+  width: '100%',
+  padding: '16px 24px',
+  borderRadius: '14px',
+  border: 'none',
+  background: 'linear-gradient(135deg, #06b6d4 0%, #10b981 100%)',
+  color: '#020617',
+  cursor: 'pointer',
+  userSelect: 'none',
+  boxShadow: '0 8px 20px -10px rgba(6, 182, 212, 0.35)'
+
+};
+
+const cyberButtonHover = {
+  transform: 'translateY(-2px)',
+  filter: 'brightness(1.1)',
+  boxShadow:
+    '0 0 0 2px rgba(6, 182, 212, 0.45), 0 24px 48px -10px rgba(6, 182, 212, 0.75)',
+};
+
+
+const cyberButtonActive = {
+  transform: 'translateY(0)',
+  boxShadow: '0 0 0 1px rgba(6, 182, 212, 0.2)'
+};
+
+
+
+

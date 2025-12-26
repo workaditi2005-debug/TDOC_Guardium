@@ -1,155 +1,76 @@
-import React from 'react';
-import createMetaMaskProvider from 'metamask-extension-provider';
-import Web3 from 'web3';
-import { getNormalizeAddress } from '../utils';
-import { EthereumEvents } from '../utils/events';
-import storage from '../utils/storage';
+import React from "react";
+import Web3 from "web3";
+import storage from "../utils/storage";
 
 export const WalletContext = React.createContext();
 export const useWallet = () => React.useContext(WalletContext);
 
-export function withWallet(Component) {
-    const WalletComponent = props => (
-        <WalletContext.Consumer>
-            {contexts => <Component {...props} {...contexts} />}
-        </WalletContext.Consumer>
-    );
-    return WalletComponent;
-}
-
-const WalletProvider = React.memo(({ children }) => {
-    const [chainId, setChainId] = React.useState(null);
+const WalletProvider = ({ children }) => {
     const [account, setAccount] = React.useState(null);
+    const [chainId, setChainId] = React.useState(null);
     const [web3, setWeb3] = React.useState(null);
     const [isAuthenticated, setAuthenticated] = React.useState(false);
     const [appLoading, setAppLoading] = React.useState(false);
 
-    console.log({ chainId, account, web3, isAuthenticated });
-
-    React.useEffect(() => {
-        connectEagerly();
-        return () => {
-            const provider = getProvider();
-            unsubscribeToEvents(provider);
-        }
-    }, []);
-
-    const subscribeToEvents = (provider) => {
-        if (provider && provider.on) {
-            provider.on(EthereumEvents.CHAIN_CHANGED, handleChainChanged);
-            provider.on(EthereumEvents.ACCOUNTS_CHANGED, handleAccountsChanged);
-            provider.on(EthereumEvents.CONNECT, handleConnect);
-            provider.on(EthereumEvents.DISCONNECT, handleDisconnect);
-        }
-    }
-
-    const unsubscribeToEvents = (provider) => {
-        if (provider && provider.removeListener) {
-            provider.removeListener(EthereumEvents.CHAIN_CHANGED, handleChainChanged);
-            provider.removeListener(EthereumEvents.ACCOUNTS_CHANGED, handleAccountsChanged);
-            provider.removeListener(EthereumEvents.CONNECT, handleConnect);
-            provider.removeListener(EthereumEvents.DISCONNECT, handleDisconnect);
-        }
-    }
-
-    const connectEagerly = async () => {
-        const metamask = await storage.get('metamask-connected');
-        if (metamask?.connected) {
-            await connectWallet();
-        }
-    }
-
     const getProvider = () => {
-        if (window.ethereum) {
-            console.log('found window.ethereum>>');
-            return window.ethereum;
-        } else {
-            const provider = createMetaMaskProvider();
-            return provider;
+        if (!window.ethereum) {
+            throw new Error("MetaMask not available in extension popup");
         }
-    }
-
-    const getAccounts = async (provider) => {
-        if (provider) {
-            const [accounts, chainId] = await Promise.all([
-                provider.request({
-                    method: 'eth_requestAccounts',
-                }),
-                provider.request({ method: 'eth_chainId' }),
-            ]);
-            return [accounts, chainId];
-        }
-        return false;
-    }
+        return window.ethereum;
+    };
 
     const connectWallet = async () => {
-        console.log("connectWallet runs....")
+        setAppLoading(true);
         try {
             const provider = getProvider();
-            const [accounts, chainId] = await getAccounts(provider);
-            if (accounts && chainId) {
-                setAppLoading(true);
-                const account = getNormalizeAddress(accounts);
-                const web3 = new Web3(provider);
-                setAccount(account);
-                setChainId(chainId);
-                setWeb3(web3);
-                setAuthenticated(true);
-                storage.set('metamask-connected', { connected: true });
-                subscribeToEvents(provider)
-            }
-        } catch (e) {
-            console.log("error while connect", e);
+
+            const accounts = await provider.request({
+                method: "eth_requestAccounts",
+            });
+
+            const chainId = await provider.request({
+                method: "eth_chainId",
+            });
+
+            const web3Instance = new Web3(provider);
+
+            setAccount(accounts[0]);
+            setChainId(chainId);
+            setWeb3(web3Instance);
+            setAuthenticated(true);
+
+            storage.set("metamask-connected", { connected: true });
+        } catch (err) {
+            console.error("MetaMask connection failed:", err);
+            setAuthenticated(false);
         } finally {
             setAppLoading(false);
         }
-    }
+    };
 
     const disconnectWallet = () => {
-        console.log("disconnectWallet runs")
-        try {
-            storage.set('metamask-connected', { connected: false });
-            setAccount(null);
-            setChainId(null);
-            setAuthenticated(false);
-            setWeb3(null);
-        } catch (e) {
-            console.log(e);
-        }
-    }
-
-    const handleAccountsChanged = (accounts) => {
-        setAccount(getNormalizeAddress(accounts));
-        console.log("[account changes]: ", getNormalizeAddress(accounts))
-    }
-
-    const handleChainChanged = (chainId) => {
-        setChainId(chainId);
-        console.log("[chainId changes]: ", chainId)
-    }
-
-    const handleConnect = () => {
-        setAuthenticated(true);
-        console.log("[connected]")
-    }
-
-    const handleDisconnect = () => {
-        console.log("[disconnected]")
-        disconnectWallet();
-    }
+        setAccount(null);
+        setChainId(null);
+        setWeb3(null);
+        setAuthenticated(false);
+        storage.set("metamask-connected", { connected: false });
+    };
 
     return (
         <WalletContext.Provider
             value={{
-                disconnectWallet,
                 connectWallet,
+                disconnectWallet,
                 isAuthenticated,
-                appLoading
+                appLoading,
+                account,
+                chainId,
+                web3,
             }}
         >
             {children}
         </WalletContext.Provider>
-    )
-});
+    );
+};
 
-export default WalletProvider
+export default WalletProvider;

@@ -10,7 +10,8 @@ export default function App() {
   const [showIntro, setShowIntro] = useState(false);
   const [vault, setVault] = useState(null);
   const [masterPassword, setMasterPassword] = useState(null);
-
+  const [showAddPassword, setShowAddPassword] = useState(false);
+  const [view, setView] = useState("vault");
   // 1. Check if user has seen the intro before
   useEffect(() => {
     // Check Chrome Storage (Production)
@@ -33,7 +34,7 @@ export default function App() {
 
   // 3. Show a blank screen or spinner while checking storage (prevents flickering)
   if (isLoading) {
-    return <div style={{width: '100%', height: '100vh', background: '#0f172a'}} />;
+    return <div style={{ width: '100%', height: '100vh', background: '#0f172a' }} />;
   }
 
   // // 4. Show Intro only if flag wasn't found
@@ -52,21 +53,26 @@ export default function App() {
               setMasterPassword(m);
             }}
           />
+        ) : showAddPassword ? (
+          <AddPassword
+            vault={vault}
+            masterPassword={masterPassword}
+            onUpdate={(v) => {
+              setVault(v);
+              setShowAddPassword(false);
+            }}
+            onClose={() => setShowAddPassword(false)}
+          />
         ) : (
-          <>
-            <Vault 
-              vault={vault} 
-              masterKey={masterPassword} 
-              onUpdate={setVault} 
-            />
-            <AddPassword
-              vault={vault}
-              masterPassword={masterPassword}
-              onUpdate={setVault}
-            />
-          </>
+          <Vault
+            vault={vault}
+            masterKey={masterPassword}
+            onUpdate={setVault}
+            onAddPassword={() => setShowAddPassword(true)}
+          />
         )}
       </div>
+
     </>
   );
 }

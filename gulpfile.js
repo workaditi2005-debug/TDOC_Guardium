@@ -31,12 +31,12 @@ gulp.task('build', function (done) {
 
   done();
 });
-// gulp.task('copy-background', function (done) {
-//   gulp.src('./background.js')
-//     .pipe(gulp.dest(config.root));
+gulp.task('copy-background', function (done) {
+  gulp.src('./background.js')
+    .pipe(gulp.dest(config.root));
 
-//   done()
-// });
+  done()
+});
 
 gulp.task('copy-manifest', function () {
   return gulp.src(
@@ -46,11 +46,11 @@ gulp.task('copy-manifest', function () {
       './background.js',
       './contextScript.js',
       './logo192.png'
-      ,'./logo.jpeg'
+      , './logo.jpeg'
     ],
     { allowEmpty: true }
   )
-  .pipe(gulp.dest(config.root));
+    .pipe(gulp.dest(config.root));
 });
 
 // gulp.task('copy-contentScript', function (done) {

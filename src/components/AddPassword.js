@@ -15,7 +15,8 @@ export default function AddPassword({ vault, masterPassword, onUpdate }) {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("error"); // Add toast type state
   const [status, setStatus] = useState("Fill in the details");
-  
+  const [addHover, setAddHover] = useState(false);
+
   useEffect(() => {
     getCurrentDomain().then(setSite);
   }, [])
@@ -66,13 +67,26 @@ export default function AddPassword({ vault, masterPassword, onUpdate }) {
       <style>{keyframes}</style>
       
       {!open && (
-        <button 
-          className="secondary" 
-          onClick={() => setOpen(true)}
-          style={styles.openButton}
-        >
-          ➕ Add Password
-        </button>
+        <button
+  onClick={() => setOpen(true)}
+  style={{
+    ...cyberAddButton,
+    ...(addHover && {
+      transform: 'translateY(-2px)',
+      boxShadow:
+        '0 0 0 2px rgba(6,182,212,0.4), 0 28px 60px -14px rgba(6,182,212,0.8)',
+      filter: 'brightness(1.08)',
+    })
+  }}
+  onMouseEnter={() => setAddHover(true)}
+  onMouseLeave={() => setAddHover(false)}
+
+  
+>
+  <span style={{ fontSize: '18px', marginRight: '6px' }}>＋</span>
+  ADD PASSWORD
+</button>
+
       )}
       
       {open && (
@@ -120,7 +134,7 @@ export default function AddPassword({ vault, masterPassword, onUpdate }) {
                 onClick={() => setShowPassword(!showPassword)}
                 style={styles.eyeButton}
               >
-                {showPassword ? '☁️' : '✨'}
+                {showPassword ? '👁️' : '🙈'}
               </button>
             </div>
 
@@ -179,26 +193,44 @@ const keyframes = `
     0%, 100% { opacity: 0.15; }
     50% { opacity: 0.25; }
   }
+
+  @keyframes fadeIn {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(24px) scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
 `;
 
 const styles = {
   openButton: {
-    position: 'relative',
+    position: 'absolute',
     zIndex: 1
   },
   container: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#0f172a',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '16px',
-    position: 'relative',
-    overflow: 'hidden',
-    boxSizing: 'border-box',
-    fontFamily: '"Ubuntu","Segoe UI", Roboto, sans-serif'
-  },
+  width: '100vh',
+  height: '100vh',
+  minHeight: '520px',
+  background: 'linear-gradient(135deg, #020617, #07121f)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '16px',
+  position: 'relative',
+  overflow: 'hidden',
+  boxSizing: 'border-box',
+  fontFamily: "'JetBrains Mono', monospace",
+},
+
   bgEffects: {
     position: 'absolute',
     inset: 0,
@@ -306,3 +338,29 @@ const styles = {
     fontWeight: '500'
   }
 };
+const cyberAddButton = {
+  width: '100%',
+  marginTop: '14px',
+  padding: '14px 18px',
+  borderRadius: '14px',
+  border: 'none',
+  cursor: 'pointer',
+
+  fontFamily: "'JetBrains Mono', monospace",
+  fontSize: '13px',
+  fontWeight: 600,
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+
+  color: '#020617',
+  background: 'linear-gradient(135deg, #06b6d4, #10b981)',
+
+  boxShadow: `
+    0 0 0 1px rgba(6,182,212,0.25),
+    0 18px 40px -14px rgba(6,182,212,0.6)
+  `,
+
+  transition: 'all 0.25s ease',
+};
+
+
